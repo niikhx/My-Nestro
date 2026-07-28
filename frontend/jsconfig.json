@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@website/*": [
+        "./src/components/website/*"
+      ],
+      "@admin/*": [
+        "./src/components/admin/*"
+      ]
+    }
+  }
+}
