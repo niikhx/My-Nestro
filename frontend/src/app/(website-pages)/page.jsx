@@ -34,7 +34,7 @@ export default function page() {
  
   return (
     <>
-      <section className="mx-6 my-5 mt-20 bg-[#2C2016] rounded-2xl overflow-hidden flex flex-col lg:flex-row items-center justify-between">
+      <section className="mx-6 my-5 bg-[#2C2016] rounded-2xl overflow-hidden flex flex-col lg:flex-row items-center justify-between">
 
         {/* Content */}
         <div className="p-4 lg:p-10 z-10 w-full lg:w-1/2">

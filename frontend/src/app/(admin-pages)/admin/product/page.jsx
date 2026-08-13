@@ -79,7 +79,7 @@ export default async function ProductTable() {
             {/* अगर कोई प्रोडक्ट न हो तो खाली रो दिखाना */}
             {(!product.data || product.data.length === 0) && (
               <tr>
-                <td colSpan="6" className="text-center py-8 text-gray-500">
+                <td colSpan="7" className="text-center py-8 text-gray-500">
                   No Products Found!
                 </td>
               </tr>

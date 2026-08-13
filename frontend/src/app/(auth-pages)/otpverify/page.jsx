@@ -46,7 +46,7 @@ export default function VerifyOTP() {
       });
 
       if (response.data.success) {
-        toast.success(response.data.massage);
+        toast.success(response.data.massage||"OTP Verified SuccessFully");
         router.push("/");
       }
     } catch (error) {

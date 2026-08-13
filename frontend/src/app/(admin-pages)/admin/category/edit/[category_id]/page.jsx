@@ -9,7 +9,7 @@ import { fetchCategoryById } from "@/utils/api";
 export default function EditCategory({ params }) {
   const { category_id } = use(params);
   const router = useRouter();
-  
+
   const [imagePreview, setImagePreview] = useState("");
   const [initialData, setInitialData] = useState(null); // Reset ke liye original data store karne ke liye
   const [formdata, setFormdata] = useState({
@@ -83,7 +83,7 @@ export default function EditCategory({ params }) {
     const form = new FormData();
     form.append("name", formdata.name);
     form.append("slug", formdata.slug);
-    
+
     // Agar image naya file object hai tabhi bheinjiye, string URL backend par crash kar sakta hai
     if (formdata.image instanceof File) {
       form.append("image", formdata.image);

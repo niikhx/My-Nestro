@@ -26,7 +26,7 @@ const read = async (req, res) => {
   try {
     const query = req.query;
     const pages = query.page || 1;
-    const limit = query.limit ? parseInt(req.query.limit) : 4;
+    const limit = query.limit ? parseInt(req.query.limit) : 6;
     const skip = limit * (pages - 1);
     const filter = {};
     const sortFilter = {};

@@ -3,12 +3,14 @@ dotenv.config()
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import connectDB from "./config/connectDB.js";
 
 const server = express();
 
 import categoryRouter from "./routers/category.routers.js";
 import roomRouter from "./routers/room.routers.js";
+import cartRouter from "./routers/cart.router.js";
 import productRouter from "./routers/product.router.js";
 import userRouterr from "./routers/user.routers.js";
 
@@ -16,10 +18,13 @@ const PORT = process.env.PORT
 
 
 server.use(express.json());
-server.use(cors({ origin: "http://localhost:3000",credentials:true }));
+server.use(express.urlencoded({ extended: true }));
+server.use(cookieParser());
+server.use(cors({ origin: "http://localhost:3000", credentials: true }));
 server.use("/api/category", categoryRouter)
 server.use("/api/room", roomRouter)
 server.use("/api/product", productRouter)
+server.use("/api/cart", cartRouter)
 server.use("/api/user", userRouterr)
 
 server.listen(PORT, () => {

@@ -7,7 +7,7 @@ import {
 
 export default function Footer() {
   return (
-    <footer className="mt-8 bg-[#1A0D02] text-[#A88B73]">
+    <footer className=" bg-[#1A0D02] text-[#A88B73]">
       <div className="max-w-[1366px] mx-auto px-4 sm:px-6 lg:px-10 py-10">
 
         {/* Top Section */}

@@ -16,7 +16,7 @@ export default async function store({ searchParams }) {
   const products = await fetchProduct({ category,page, room, minPrice, maxPrice, stock, status: true, sort })
   return (
     <>
-      <section className="mx-4 mt-20 overflow-hidden rounded-2xl bg-[linear-gradient(135deg,#2C2016_0%,#3D2B1A_60%,#5A3D24_100%)] sm:mx-6 sm:mt-20">
+      <section className="mx-4 overflow-hidden rounded-2xl bg-[linear-gradient(135deg,#2C2016_0%,#3D2B1A_60%,#5A3D24_100%)] sm:mx-6 sm:mt-20">
         <div className="relative min-h-[300px] w-full overflow-hidden rounded-3xl bg-[radial-gradient(ellipse_at_70%_50%,rgba(198,162,126,0.1)_0%,transparent_70%)]">
 
           {/* Glow Effects */}

@@ -2,8 +2,9 @@
 import React from 'react'
 import { Provider } from 'react-redux';
 import { store } from './store';
+
 export default function StoreProvider({ children }) {
-  console.log("Store Loaded Successfully:", store.getState());
+  // console.log("Store Loaded Successfully:", store.getState());
   return (
     <>
       <Provider store={store}>

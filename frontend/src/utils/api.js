@@ -1,5 +1,5 @@
 import { client } from "./helper.js";
-
+import { cookies } from "next/headers";
 
 export const fetchCategory = async ({ status = null } = {}) => {
   try {
@@ -146,3 +146,31 @@ export const fetchProductById = async (id) => {
     }
   }
 };
+
+
+export const getprofile = async () => {
+  try {
+    const cookie = await cookies();// token ko cookies se get kar raha hai
+    const token = cookie.get("jwt")?.value || null;// agar token null hai to null return kar raha hai
+    const response = await client.get("user/get-profile",// token ko headers me send kar raha hai
+      {
+        headers: {
+          Authorization: token
+        }
+      }
+    )
+    console.log(" response", response)
+
+    if (response.data.success) {
+      return {
+        data: response.data.user,
+        success: response.data.success
+      }
+    }
+  } catch (error) {
+    return {
+      data: null,
+      success: false
+    }
+  }
+}

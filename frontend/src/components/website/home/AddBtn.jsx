@@ -5,15 +5,16 @@ import { addToCart } from '@/redux/features/cartSlice'
 
 export default function CartButton({ product }) {
   const disPatcher = useDispatch()
-  
+
   function cartHandler() {
+    console.log("Product object on Add to Cart:", product);
     disPatcher(addToCart({
       id: product._id,
       name: product.name,
       salePrice: product.salePrice,
       originalPrice: product.originalPrice,
       discount: product.discount,
-      thumbnail: product.thumbnail,
+      thumbnail: product.thumbnail || product.image || product.images?.[0] || product.img || "",
       qty: 1
     }))
   }

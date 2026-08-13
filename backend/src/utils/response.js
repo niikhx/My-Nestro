@@ -1,8 +1,9 @@
 // success response
-const sendSuccess = (res, massage = "Success") => {
+const sendSuccess = (res, massage = "Success", optional = null) => {
   return res.status(200).json({
     success: true,
-    massage
+    massage,
+    ...optional
   })
 };
 

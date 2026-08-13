@@ -9,7 +9,7 @@ import {
 } from "../utils/response.js";
 import Cryptr from "cryptr";
 import sendOtpMail from "../utils/otpmail.js";
-import {generateToken} from "../utils/helper.js";
+import { generateToken } from "../utils/helper.js";
 
 const cryptr = new Cryptr(process.env.SECRET_KEY);
 
@@ -18,10 +18,8 @@ const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
     if (!name || !email || !password) return sendBadRequest(res);
-
-    const user = await UserModel.findOne({ email: email });
+    const user = await UserModel.findOne({ email });
     if (user) return sendConflict(res, "User already exists");
-
     const encrypted_Password = cryptr.encrypt(password);
 
     // Exact 6 digits OTP: 100000 - 999999
@@ -34,7 +32,7 @@ const register = async (req, res) => {
       email,
       password: encrypted_Password,
       otp,
-      otpExpire,
+      otpExpire
     });
 
     return sendCreated(res, "User created successfully");
@@ -50,7 +48,7 @@ const VerifyOtp = async (req, res) => {
     const { email, otp } = req.body;
     if (!email || !otp) return sendBadRequest(res);
 
-    const user = await UserModel.findOne({ email: email });
+    const user = await UserModel.findOne({ email });
     if (!user) return sendNotFound(res, "User not found");
 
     if (user.otp !== Number(otp)) {
@@ -66,7 +64,7 @@ const VerifyOtp = async (req, res) => {
     user.otpExpire = undefined;
     await user.save();
 
-    return sendSuccess(res, "OTP verified successfully");
+    return sendSuccess(res, "OTP verified SuccessFully");
   } catch (error) {
     console.error("Verify OTP Error:", error);
     return sendServerError(res);
@@ -74,44 +72,38 @@ const VerifyOtp = async (req, res) => {
 };
 
 // 3. Login User
-const login = async (req, res) => {
+const signin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return sendBadRequest(res, "Email and password are required");
-
+    if (!email || !password) return sendBadRequest(res);
     const user = await UserModel.findOne({ email });
-    if (!user) return sendNotFound(res, "User not found");
-
-    if (!user.isVerified) {
-      return sendBadRequest(res, "Please verify your email/OTP first before logging in.");
-    }
-
+    if (!user) return sendNotFound(res, "Accound already exist")
     const decryptedPass = cryptr.decrypt(user.password);
-    if (decryptedPass !== password) {
-      return sendBadRequest(res, "Invalid credentials");
+    if (decryptedPass != password) {
+      return sendBadRequest(res)
     }
-    const token = generateToken(user.id);// Generate JWT token for the user
+    const token = generateToken(user.id)
 
     res.cookie('jwt', token, {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      httpOnly: true,// Cookie is only accessible by the server
-      secure: false,// Set to true if using HTTPS
-      sameSite: 'strict',// Cookie will only be sent for same-site requests
-
-    }
+      maxAge: 30 * 24 * 60 * 60 * 1000,       // Expiration time in milliseconds (15 minutes)
+      httpOnly: true,       // Prevents client-side JS from reading the cookie (protects against XSS)
+      secure: false,         // Ensures cookie is only sent over HTTPS connections
+      sameSite: 'strict'    // Controls cross-site request behavior ('strict', 'lax', or 'none')
+    });
+    return sendSuccess(res, "login successfully",
+      {user_id: user.id}
     )
 
-    return sendSuccess(res, "Login successful");
   } catch (error) {
-    console.error("Login Error:", error);
-    return sendServerError(res);
+    return sendServerError(res)
   }
-};
+}
 
 // Dummy / Placeholder Controllers
 const read = async (req, res) => {
   try {
-    console.log(req);
+    const users = await UserModel.find().select("-password");
+    return sendSuccess(res, "Users fetched successfully", users);
   } catch (error) {
     return sendServerError(res);
   }
@@ -165,16 +157,48 @@ const updateProfile = async (req, res) => {
   }
 };
 
+const getProfile = async (req, res) => {
+  const user = req.user || null;
+  return res.status(200).json({
+    message: "user find successfully",
+    success: true,
+    user
+  });
+};
+
+const logout = async (req, res) => {
+  try {
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Logout successful",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
 // Complete Export Object
 export {
   register,
   VerifyOtp,
-  login,
+  signin,
   read,
   readById,
   edit,
   deleteById,
+  logout,
   statusUpdate,
+  getProfile,
   updatePassword,
   updateProfile,
 };

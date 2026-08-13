@@ -3,11 +3,33 @@ import { decreaseQuantity, increaseQuantity, removeFromcart } from "@/redux/feat
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
+import { useEffect } from "react";
+import { lsToCart } from "@/redux/features/cartSlice.js";
 
 
 export default function CartPage() {
-    const cart = useSelector((store) => store.cart);
-    const dispatcher = useDispatch()
+    const cartItem = useSelector((store) => store.cart);
+    console.log("Cart Items in Redux:", cartItem.items)
+    const { items } = useSelector((state) => state.cart);
+    console.log("CART ITEMS IN REDUX:", items);
+        const dispatcher = useDispatch()
+    useEffect(() => {
+        dispatcher(lsToCart()); // Page load hone par LocalStorage se sync
+    }, [dispatcher]);
+
+    if (!cartItem?.items || cartItem.items.length === 0) {
+        return (
+            <div className="min-h-screen mt-20 flex flex-col items-center justify-center bg-gray-100 py-10">
+                <h2 className="text-2xl font-bold mb-4">Your Cart is Empty 🛒</h2>
+                <Link href="/">
+                    <button className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800">
+                        Continue Shopping
+                    </button>
+                </Link>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen mt-20 bg-gray-100 py-10">
 
@@ -24,7 +46,7 @@ export default function CartPage() {
                     <div className="lg:col-span-2 space-y-5">
 
                         {
-                            cart?.items.map((item) => (
+                            cartItem?.items.map((item) => (
 
                                 <div
                                     key={item.id}
@@ -33,7 +55,8 @@ export default function CartPage() {
 
                                     {/* Image */}
                                     <img
-                                        src={item.thumbnail}
+                                        src={item.thumbnail || item.image || item.img||item.images}
+                                        alt={""}
                                         className="w-32 h-32 object-cover rounded-lg"
                                     />
 
@@ -103,7 +126,7 @@ export default function CartPage() {
                                 </span>
 
                                 <span>
-                                    ₹ {cart.original_total}
+                                    ₹ {cartItem.original_total}
                                 </span>
                             </div>
 
@@ -113,7 +136,7 @@ export default function CartPage() {
                                 </span>
 
                                 <span>
-                                    ₹ {(cart.original_total) - (cart.final_total)}
+                                    ₹ {(cartItem.original_total) - (cartItem.final_total)}
                                 </span>
                             </div>
 
@@ -123,7 +146,7 @@ export default function CartPage() {
                                     Total
                                 </span>
                                 <span className="font-bold text-xl">
-                                    ₹ {cart.final_total}
+                                    ₹ {cartItem.final_total}
                                 </span>
                             </div>
                         </div>

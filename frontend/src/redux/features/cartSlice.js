@@ -12,37 +12,26 @@ export const cartSlice = createSlice({
   initialState,
   reducers: {
     addToCart: (state, { payload }) => {
-      const existingItem = state.items.find((item) => item.id == payload.id)
-      if (existingItem) {
-        existingItem.qty += 1
+      const existingItems = state.items.find((item) => item.id == payload.id);
+
+      if (existingItems) {
+        existingItems.qty += 1
       } else {
         state.items.push(payload)
       }
-      state.original_total += Number(payload.originalPrice)
       state.final_total += Number(payload.salePrice)
-      localStorage.setItem('cart', JSON.stringify(state))
+      state.original_total += Number(payload.originalPrice)
+      localStorage.setItem("cart", JSON.stringify(state))
     },
     removeFromcart: (state, { payload }) => {
 
-      const removeItem = state.items.find(
-        (item) => item.id == payload.id
-      );
-
-      if (removeItem) {
-
-        state.original_total -=
-          Number(removeItem.originalPrice) * removeItem.qty;
-
-        state.final_total -=
-          Number(removeItem.salePrice) * removeItem.qty;
+      const removeItems = state.items.find((item) => item.id == payload.id);
+      if (removeItems) {
+        state.original_total -= Number(removeItems.originalPrice) * removeItems.qty;
+        state.final_total -= Number(removeItems.salePrice) * removeItems.qty;
       }
-
-
-      state.items = state.items.filter(
-        (item) => item.id !== payload.id
-      );
-
-      localStorage.setItem("cart", JSON.stringify(state));
+      state.items = state.items.filter((item) => item.id != payload.id);
+            localStorage.setItem("cart", JSON.stringify(state))
     },
     emptyCart: (state) => {
       state.items = [];
@@ -53,48 +42,22 @@ export const cartSlice = createSlice({
 
     },
     increaseQuantity: (state, { payload }) => {
-
-      const cartItem = state.items.find(
-        (item) => item.id == payload.id
-      );
-
-      if (!cartItem) return;
-
-      cartItem.qty += 1;
-
-      state.original_total += Number(cartItem.originalPrice);
-      state.final_total += Number(cartItem.salePrice);
-
-      localStorage.setItem("cart", JSON.stringify(state));
+      const cartItem = state.items.find((item) => item.id == payload.id);
+      if (!cartItem) return
+      cartItem.qty += 1
+      state.final_total += Number(cartItem.salePrice)
+      state.original_total += Number(cartItem.originalPrice)
+      localStorage.setItem("cart", JSON.stringify(state))
     },
     decreaseQuantity: (state, { payload }) => {
-
-      const cartItem = state.items.find(
-        (item) => item.id == payload.id
-      );
-
-      if (!cartItem) return;
-
-
+      const cartItem = state.items.find((item) => item.id == payload.id);
+      if (!cartItem) return
       if (cartItem.qty > 1) {
-
         cartItem.qty -= 1;
-
         state.original_total -= Number(cartItem.originalPrice);
         state.final_total -= Number(cartItem.salePrice);
-
-      } else {
-
-        state.original_total -= Number(cartItem.originalPrice);
-        state.final_total -= Number(cartItem.salePrice);
-
-        state.items = state.items.filter(
-          (item) => item.id !== payload.id
-        );
+        localStorage.setItem("cart", JSON.stringify(state));
       }
-
-
-      localStorage.setItem("cart", JSON.stringify(state));
     },
 
 
@@ -104,29 +67,29 @@ export const cartSlice = createSlice({
 
       if (cart) {
 
-        state.items = cart.items;
-        state.original_total = Number(cart.original_total);
-        state.final_total = Number(cart.final_total);
+        state.items = cart.items||[];
+        state.original_total = Number(cart.original_total)||0;
+        state.final_total = Number(cart.final_total)||0;
 
       }
-    }
+    },
 
-    // cartTotal: (state) => {
-    //   let { total, original_total } = state.items.reduce(
-    //     (cartTotal, cartItem) => {
-    //       const { salePrice, originalPrice, qty } = cartItem;
-    //       const itemTotal = salePrice * qty;
-    //       const itemOriginalTotal = originalPrice * qty;
-    //       return {
-    // total: cartTotal.total + itemTotal,
-    // original_total: cartTotal.original_total + itemOriginalTotal
-    //       };
-    //     },
-    //     { total: 0, original_total: 0 }
-    //   );
-    //   state.final_total = total;
-    //   state.original_total = original_total;
-    // }
+    cartTotal: (state, { payload }) => {
+      //   let { total, original_total } = state.items.reduce(
+      //     (cartTotal, cartItem) => {
+      //       const { salePrice, originalPrice, qty } = cartItem;
+      //       const itemTotal = salePrice * qty;
+      //       const itemOriginalTotal = originalPrice * qty;
+      //       return {
+      // total: cartTotal.total + itemTotal,
+      // original_total: cartTotal.original_total + itemOriginalTotal
+      //       };
+      //     },
+      //     { total: 0, original_total: 0 }
+      //   );
+      //   state.final_total = total;
+      //   state.original_total = original_total;
+    }
   }
 })
 
