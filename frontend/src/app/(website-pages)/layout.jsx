@@ -4,6 +4,7 @@ import Header from "@/components/website/Header";
 import Footer from "@/components/website/Footer";
 import StoreProvider from "@/redux/StoreProvider";
 import { getprofile } from "@/utils/api";
+import { Toaster } from "sonner";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -28,7 +29,7 @@ export default async function RootLayout({ children }) {
   const response = await getprofile()
   if (response.success) {
     user = response.data
-  }
+    }
   return (
     <html
       lang="en"
@@ -39,6 +40,7 @@ export default async function RootLayout({ children }) {
           <Header user={user} />
           {children}
           <Footer />
+          <Toaster position="top-center" richColors />
         </StoreProvider>
       </body>
     </html>

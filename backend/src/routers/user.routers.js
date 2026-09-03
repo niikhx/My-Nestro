@@ -9,6 +9,8 @@ import {
   statusUpdate,
   VerifyOtp,
   logout,
+  logoutWithCredentials,
+  deleteAccountWithCredentials,
   updatePassword,
   updateProfile,
   getProfile
@@ -21,12 +23,14 @@ router.post("/register", register);
 router.post("/verify-otp", VerifyOtp);
 router.get("/get-profile", protect, getProfile);
 router.post("/signin", signin);
+router.post("/logout", logoutWithCredentials);
+router.post("/delete-account", deleteAccountWithCredentials);
 router.put("/edit/:id", edit);
 router.put("/update-profile/:id", updateProfile);
 router.put("/update-password/:id", updatePassword);
 router.get("/", read);
-router.get("/:id", readById);
 router.get("/logout", protect, logout)
+router.get("/:id", readById);
 router.delete("/delete/:id", deleteById);
 router.patch("/status-update/:id", statusUpdate);
 

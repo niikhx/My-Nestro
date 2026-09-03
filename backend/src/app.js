@@ -13,6 +13,7 @@ import roomRouter from "./routers/room.routers.js";
 import cartRouter from "./routers/cart.router.js";
 import productRouter from "./routers/product.router.js";
 import userRouterr from "./routers/user.routers.js";
+import OrderRouter from "./routers/order.router.js"
 
 const PORT = process.env.PORT
 
@@ -26,6 +27,7 @@ server.use("/api/room", roomRouter)
 server.use("/api/product", productRouter)
 server.use("/api/cart", cartRouter)
 server.use("/api/user", userRouterr)
+server.use("/api/order", OrderRouter)
 
 server.listen(PORT, () => {
   connectDB()

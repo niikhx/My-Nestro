@@ -10,7 +10,7 @@ export default function VerifyOTP() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const email = searchParams.get("email") || "";
+  const email = (searchParams.get("email") || "").trim().toLowerCase();
 
   const [loading, setLoading] = useState(false);
 
@@ -46,8 +46,8 @@ export default function VerifyOTP() {
       });
 
       if (response.data.success) {
-        toast.success(response.data.massage||"OTP Verified SuccessFully");
-        router.push("/");
+        toast.success(response.data.massage || "OTP Verified SuccessFully");
+        router.push("/signin");
       }
     } catch (error) {
       toast.error(
@@ -119,7 +119,7 @@ export default function VerifyOTP() {
         </form>
 
         <p className="text-center text-sm mt-6">
-          Didn't receive code?
+          Didn&apos;t receive code?
 
           <button
             onClick={resendOTP}

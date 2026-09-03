@@ -159,7 +159,7 @@ export const getprofile = async () => {
         }
       }
     )
-    console.log(" response", response)
+    // console.log(" response", response)
 
     if (response.data.success) {
       return {

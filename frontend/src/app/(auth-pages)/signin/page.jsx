@@ -10,10 +10,8 @@ import { CiDeliveryTruck } from "react-icons/ci";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
 import { client } from "@/utils/helper";
-import { Carter_One, Niconne } from "next/font/google";
 
 export default function AuthPage() {
-  const lsCart = localStorage.getItem("cart")
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeTab = searchParams.get("auth") === "signin" ? "signin" : "signup";
@@ -62,43 +60,77 @@ export default function AuthPage() {
       if (response.data.success) {
         toast.success(response.data.message || "Login Successfully");
         setSignInData({ email: "", password: "" });
-        let cart_item = []
-        if (lsCart != null || lsCart != undefined) {
-          cart_item != JSON.parse(lsCart).items
+
+        let cart_item = [];
+        try {
+          const storedCart = JSON.parse(localStorage.getItem("cart") || "{}");
+          cart_item = Array.isArray(storedCart.items)
+            ? storedCart.items.map((item) => ({
+                id: item.id,
+                qty: item.qty || 1,
+              }))
+            : [];
+        } catch (error) {
+          cart_item = [];
         }
-        const cart_response = await client.post("/cart/sync-cart", {
-          cart_item: cart_item,
-          user_id: response.data.user_id
-        });
-        if (cart_response.data.success) {
-          localStorage.removeItem("cart")
-          const latest_cart = cart_response.data.latest_cart;
-          let original_total = 0, final_total = 0;
-          const new_cart = latest_cart.map((item) => {
-            original_total += item.product_id.originalPrice * item.quantity;
-            final_total += item.product_id.salePrice * item.quantity;
-            return {
-              id: item.product_id._id,
-              name: item.product_id.name,
-              salePrice: item.product_id.salePrice,
-              discount: item.product_id.discount,
-              originalPrice: item.product_id.originalPrice,
-              qty: item.quantity,
-              thumbnail: item.product_id.thumbnail,
-            }
+
+        try {
+          const cart_response = await client.post("/cart/sync-cart", {
+            cart_item: cart_item,
+            user_id: response.data.user_id,
           });
-          const cart_data = {
-            items: new_cart,
-            original_total,
-            final_total,
+
+          if (cart_response.data.success) {
+            const latest_cart = cart_response.data.latest_cart || [];
+            let original_total = 0;
+            let final_total = 0;
+
+            const new_cart = latest_cart
+              .map((item) => {
+                if (!item?.product_id) return null;
+
+                const product = item.product_id;
+                const quantity = Number(item.quantity) || 1;
+                original_total += Number(product.originalPrice || 0) * quantity;
+                final_total += Number(product.salePrice || 0) * quantity;
+
+                return {
+                  id: product._id,
+                  name: product.name,
+                  salePrice: product.salePrice,
+                  discount: product.discount,
+                  originalPrice: product.originalPrice,
+                  qty: quantity,
+                  thumbnail: product.thumbnail,
+                };
+              })
+              .filter(Boolean);
+
+            const cart_data = {
+              items: new_cart,
+              original_total,
+              final_total,
+            };
+
+            localStorage.setItem("cart", JSON.stringify(cart_data));
           }
-          localStorage.setItem("cart", JSON.stringify(cart_data))
+        } catch (cartError) {
+          console.error("Cart sync failed after login:", cartError);
         }
+
         router.push("/");
+      } else {
+        toast.error(
+          response.data.message ||
+          response.data.massage ||
+          "Unable to sign in"
+        );
       }
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Internal Server Error"
+        error.response?.data?.message ||
+        error.response?.data?.massage ||
+        "Internal Server Error"
       );
     } finally {
       setLoading(false);
@@ -124,6 +156,7 @@ export default function AuthPage() {
     } finally {
       setLoading(false);
     }
+    router.push("/signin");
   }
 
   return (
@@ -152,7 +185,7 @@ export default function AuthPage() {
 
           {/* Description */}
           <p className="mt-2 text-[#B7A89A] text-[10px] md:text-[12px] leading-7">
-            Join 12,000 homeowners who've transformed their living spaces with Nestro.
+            Join 12,000 homeowners who&apos;ve transformed their living spaces with Nestro.
           </p>
 
           {/* Features */}
@@ -395,7 +428,7 @@ export default function AuthPage() {
           <div className="mt-5 text-center">
             {activeTab === "signin" ? (
               <p className="text-[12px] text-[#6E655A]">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link
                   href="?auth=signup"
                   className="text-[#8B5E3C] font-medium hover:underline"

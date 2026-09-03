@@ -2,13 +2,14 @@
 import React from 'react'
 import { useDispatch } from 'react-redux'
 import { addToCart } from '@/redux/features/cartSlice'
+import { client } from '@/utils/helper'
 
 export default function CartButton({ product }) {
   const disPatcher = useDispatch()
 
-  function cartHandler() {
+  async function cartHandler() {
     console.log("Product object on Add to Cart:", product);
-    disPatcher(addToCart({
+    const cartItem = {
       id: product._id,
       name: product.name,
       salePrice: product.salePrice,
@@ -16,7 +17,19 @@ export default function CartButton({ product }) {
       discount: product.discount,
       thumbnail: product.thumbnail || product.image || product.images?.[0] || product.img || "",
       qty: 1
-    }))
+    }
+
+    disPatcher(addToCart(cartItem))
+
+    try {
+      await client.post('/cart/sync-cart', {
+        cart_item: [{ id: cartItem.id, qty: cartItem.qty }],
+      })
+    } catch (error) {
+      if (error.response?.status !== 401) {
+        console.error('Cart sync failed:', error)
+      }
+    }
   }
 
   return (

@@ -21,35 +21,23 @@ const navLinks = [
 ]
 
 import { useSelector, useDispatch } from 'react-redux'
-import { emptyCart, lsToCart } from '@/redux/features/cartSlice'
-import { client } from '@/utils/helper'
-import { useRouter } from 'next/navigation'
+import { lsToCart } from '@/redux/features/cartSlice'
 
 const iconBtn =
   'w-9 h-9 rounded-full flex items-center justify-center text-[#444444] hover:bg-[#F0EBE3] transition-all'
 
 export default function Header({ user = null }) {
-  const router = useRouter()
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
 
   const cartItems = useSelector((store) => store.cart?.items)
-  console.log(cartItems)
   const dispatcher = useDispatch();
   useEffect(
     () => {
       dispatcher(lsToCart());
     },
-    []
+    [dispatcher]
   )
-
-
-  async function logoutHanlder() {
-    const response = await client("user/logout");
-    dispatcher(emptyCart())
-    // Refresh server components
-    router.refresh();
-  }
 
   return (
     <header className="sticky top-0 z-[300] bg-[#FAFAF9]/95 backdrop-blur-md border-b border-[#E8E0D5] h-[58px] flex items-center justify-between px-4 md:px-8">
@@ -74,26 +62,24 @@ export default function Header({ user = null }) {
           </Link>
         ))}
 
-        {
-          user !== null ?
-            <button
-              onClick={logoutHanlder}
-              className="text-[11px] tracking-[0.06em] rounded-md px-3 py-1.5 transition-colors bg-black text-white hover:bg-gray-800"
-            >
-              Logout
-            </button>
-            :
-            <Link
-              href="signin"
-              className={`text-[11px] tracking-[0.06em] rounded-md px-3 py-1.5 transition-colors ${pathname === "signin"
-                ? 'bg-[#F0EBE3] text-[#8B5E3C]'
-                : 'text-[#6B7280] hover:bg-[#F0EBE3] hover:text-[#8B5E3C]'
-                }`}
-            >
-              Sign In
-            </Link>
-
-        }
+        {user ? (
+          <Link
+            href="/logout"
+            className="text-[11px] tracking-[0.06em] rounded-md px-3 py-1.5 transition-colors bg-black text-white hover:bg-gray-800"
+          >
+            Logout
+          </Link>
+        ) : (
+          <Link
+            href="/signin?auth=signin"
+            className={`text-[11px] tracking-[0.06em] rounded-md px-3 py-1.5 transition-colors ${pathname === "/signin"
+              ? 'bg-[#F0EBE3] text-[#8B5E3C]'
+              : 'text-[#6B7280] hover:bg-[#F0EBE3] hover:text-[#8B5E3C]'
+              }`}
+          >
+            Sign In
+          </Link>
+        )}
 
 
       </nav>
@@ -113,9 +99,9 @@ export default function Header({ user = null }) {
         </Link>
 
         <Link
-          href="/signin"
+          href={user ? "/logout" : "/signin?auth=signin"}
           aria-label="Profile"
-          className="w-9 h-9 rounded-full border flex gap-4 border-[#C6A27E] flex items-center justify-center text-[#8B5E3C] hover:bg-[#C6A27E] hover:text-white transition-all"
+          className="w-9 h-9 rounded-full border gap-4 border-[#C6A27E] flex items-center justify-center text-[#8B5E3C] hover:bg-[#C6A27E] hover:text-white transition-all"
         >
           <IconUser size={18} stroke={1.8} />
         
@@ -172,6 +158,13 @@ export default function Header({ user = null }) {
               {link.label}
             </Link>
           ))}
+          <Link
+            href={user ? "/logout" : "/signin?auth=signin"}
+            onClick={() => setMenuOpen(false)}
+            className="text-[12px] tracking-[0.06em] rounded-md px-3 py-2 w-full bg-[#1E1E1E] text-white hover:bg-[#8B5E3C] transition-colors"
+          >
+            {user ? "Logout" : "Sign In"}
+          </Link>
         </div>
       )}
     </header>

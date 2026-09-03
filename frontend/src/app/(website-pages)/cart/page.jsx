@@ -5,17 +5,39 @@ import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
 import { useEffect } from "react";
 import { lsToCart } from "@/redux/features/cartSlice.js";
+import { client } from "@/utils/helper";
 
 
 export default function CartPage() {
     const cartItem = useSelector((store) => store.cart);
-    console.log("Cart Items in Redux:", cartItem.items)
     const { items } = useSelector((state) => state.cart);
-    console.log("CART ITEMS IN REDUX:", items);
-        const dispatcher = useDispatch()
+    const dispatcher = useDispatch()
     useEffect(() => {
         dispatcher(lsToCart()); // Page load hone par LocalStorage se sync
     }, [dispatcher]);
+
+    async function changeQuantity(item, quantity) {
+        if (quantity < 1) return;
+
+        let updateLocalCart = false;
+        try {
+            const response = await client.put(`/cart/item/${item.id}`, { quantity });
+            updateLocalCart = response.data.success;
+        } catch (error) {
+            updateLocalCart = error.response?.status === 401;
+            if (error.response?.status !== 401) {
+                console.error("Cart quantity update failed:", error);
+            }
+        }
+
+        if (!updateLocalCart) return;
+
+        if (quantity > item.qty) {
+            dispatcher(increaseQuantity({ id: item.id }));
+        } else if (quantity < item.qty) {
+            dispatcher(decreaseQuantity({ id: item.id }));
+        }
+    }
 
     if (!cartItem?.items || cartItem.items.length === 0) {
         return (
@@ -55,7 +77,7 @@ export default function CartPage() {
 
                                     {/* Image */}
                                     <img
-                                        src={item.thumbnail || item.image || item.img||item.images}
+                                        src={item.thumbnail || item.image || item.img || item.images}
                                         alt={""}
                                         className="w-32 h-32 object-cover rounded-lg"
                                     />
@@ -75,7 +97,7 @@ export default function CartPage() {
 
                                             <div className="flex items-center gap-3">
 
-                                                <button onClick={() => dispatcher(decreaseQuantity({ id: item.id }))} className="border px-3 py-1 rounded">
+                                                <button onClick={() => changeQuantity(item, item.qty - 1)} className="border px-3 py-1 rounded">
                                                     -
                                                 </button>
 
@@ -84,7 +106,7 @@ export default function CartPage() {
                                                 </span>
 
 
-                                                <button onClick={() => dispatcher(increaseQuantity({ id: item.id }))} className="border px-3 py-1 rounded">
+                                                <button onClick={() => changeQuantity(item, item.qty + 1)} className="border px-3 py-1 rounded">
                                                     +
                                                 </button>
 

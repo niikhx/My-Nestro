@@ -18,7 +18,8 @@ const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
     if (!name || !email || !password) return sendBadRequest(res);
-    const user = await UserModel.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await UserModel.findOne({ email: normalizedEmail });
     if (user) return sendConflict(res, "User already exists");
     const encrypted_Password = cryptr.encrypt(password);
 
@@ -26,10 +27,10 @@ const register = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000);
     const otpExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
 
-    await sendOtpMail(email, otp);
+    await sendOtpMail(normalizedEmail, otp);
     await UserModel.create({
       name,
-      email,
+      email: normalizedEmail,
       password: encrypted_Password,
       otp,
       otpExpire
@@ -48,7 +49,7 @@ const VerifyOtp = async (req, res) => {
     const { email, otp } = req.body;
     if (!email || !otp) return sendBadRequest(res);
 
-    const user = await UserModel.findOne({ email });
+    const user = await UserModel.findOne({ email: email.trim().toLowerCase() });
     if (!user) return sendNotFound(res, "User not found");
 
     if (user.otp !== Number(otp)) {
@@ -76,11 +77,19 @@ const signin = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return sendBadRequest(res);
-    const user = await UserModel.findOne({ email });
-    if (!user) return sendNotFound(res, "Accound already exist")
-    const decryptedPass = cryptr.decrypt(user.password);
-    if (decryptedPass != password) {
-      return sendBadRequest(res)
+    const user = await UserModel.findOne({ email: email.trim().toLowerCase() });
+    if (!user) return sendNotFound(res, "Account not found");
+
+    let decryptedPass;
+    try {
+      decryptedPass = cryptr.decrypt(user.password);
+    } catch (error) {
+      console.error("Stored password could not be decrypted:", error);
+      return sendServerError(res);
+    }
+
+    if (decryptedPass !== password) {
+      return sendBadRequest(res, "Invalid email or password");
     }
     const token = generateToken(user.id)
 
@@ -90,9 +99,7 @@ const signin = async (req, res) => {
       secure: false,         // Ensures cookie is only sent over HTTPS connections
       sameSite: 'strict'    // Controls cross-site request behavior ('strict', 'lax', or 'none')
     });
-    return sendSuccess(res, "login successfully",
-      {user_id: user.id}
-    )
+    return sendSuccess(res, "login successfully", { user_id: user.id });
 
   } catch (error) {
     return sendServerError(res)
@@ -186,6 +193,99 @@ const logout = async (req, res) => {
   }
 };
 
+const logoutWithCredentials = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
+    }
+
+    const user = await UserModel.findOne({ email: email.trim().toLowerCase() });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    const decryptedPassword = cryptr.decrypt(user.password);
+    if (decryptedPassword !== password) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Logout successful",
+    });
+  } catch (error) {
+    console.error("Credential logout error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to logout",
+    });
+  }
+};
+
+const deleteAccountWithCredentials = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
+      });
+    }
+
+    const user = await UserModel.findOne({ email: email.trim().toLowerCase() });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    const decryptedPassword = cryptr.decrypt(user.password);
+    if (decryptedPassword !== password) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    await UserModel.deleteOne({ _id: user._id });
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Account deleted successfully",
+    });
+  } catch (error) {
+    console.error("Account deletion error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to delete account",
+    });
+  }
+};
+
 
 // Complete Export Object
 export {
@@ -197,6 +297,8 @@ export {
   edit,
   deleteById,
   logout,
+  logoutWithCredentials,
+  deleteAccountWithCredentials,
   statusUpdate,
   getProfile,
   updatePassword,
