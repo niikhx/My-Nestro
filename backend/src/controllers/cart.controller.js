@@ -1,41 +1,52 @@
 import CartModel from "../models/cart.model.js";
 import { sendServerError } from "../utils/response.js";
 
+const cartProjection = "name salePrice discount originalPrice thumbnail image images";
+
+const getCart = async (req, res) => {
+  try {
+    const cart = await CartModel.find({ user_id: req.user._id }).populate(
+      "product_id",
+      cartProjection
+    );
+
+    return res.status(200).json({ success: true, cart });
+  } catch (error) {
+    return sendServerError(res, error);
+  }
+};
+
 const syncCart = async (req, res) => {
   try {
     const { cart_item } = req.body;
     const user_id = req.user._id;
 
-    if (!Array.isArray(cart_item) || cart_item.length === 0) {
+    if (!Array.isArray(cart_item)) {
       return res.status(400).json({
         success: false,
         message: "Cart items are required",
       });
     }
 
-    for (let cart_items of cart_item) {
-      if (!cart_items?.id || !Number(cart_items.qty)) continue;
+    for (const cart_items of cart_item) {
+      const quantity = Number(cart_items?.qty);
+      if (!cart_items?.id || !Number.isInteger(quantity) || quantity < 1) continue;
 
-      const cart = await CartModel.findOne({
-        user_id: user_id,
-        product_id: cart_items.id
-      })
+      const cart = await CartModel.findOne({ user_id, product_id: cart_items.id });
       if (cart) {
-        cart.quantity += cart_items.qty
+        cart.quantity += quantity;
         await cart.save();
       }
       else {
         await CartModel.create({
           user_id: user_id,
           product_id: cart_items.id,
-          quantity: cart_items.qty
+          quantity
         })
       }
     }
 
-    const latest_cart = await CartModel.find({ user_id }).populate(
-      "product_id",
-      "name salePrice discount originalPrice thumbnail image images");
+    const latest_cart = await CartModel.find({ user_id }).populate("product_id", cartProjection);
     return res.send({
       latest_cart,
       success: true,
@@ -43,6 +54,24 @@ const syncCart = async (req, res) => {
     })
   } catch (error) {
     return sendServerError(res)
+  }
+};
+
+const removeCartItem = async (req, res) => {
+  try {
+    const { product_id } = req.params;
+    const deleted = await CartModel.findOneAndDelete({
+      user_id: req.user._id,
+      product_id,
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: "Cart item not found" });
+    }
+
+    return res.status(200).json({ success: true, message: "Cart item removed" });
+  } catch (error) {
+    return sendServerError(res, error);
   }
 };
 
@@ -81,7 +110,7 @@ const updateCartQuantity = async (req, res) => {
   }
 };
 
-export { syncCart, updateCartQuantity };
+export { getCart, syncCart, updateCartQuantity, removeCartItem };
 
 
 // 6a79a27bb1d7279c176a97be user id

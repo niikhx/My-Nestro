@@ -21,3 +21,4 @@ export function proxy(request) {
 export const config = {
   matcher: ["/checkout/:path*", "/admin/:path*"],
 };
+

@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "../globals.css";
 import { Toaster } from 'sonner';
+import StoreProvider from '@/redux/StoreProvider';
 
 
 const geistSans = Geist({
@@ -29,8 +30,10 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className={`${inter.className} min-h-full flex flex-col bg-[#f5f1ed]`}>
-        <Toaster position="top-center" richColors />
-        {children}
+        <StoreProvider>
+          {children}
+          <Toaster position="top-center" richColors />
+        </StoreProvider>
       </body>
     </html>
   );

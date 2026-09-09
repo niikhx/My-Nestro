@@ -1,5 +1,5 @@
 'use client'
-import { decreaseQuantity, increaseQuantity, removeFromcart } from "@/redux/features/cartSlice.js";
+import { decreaseQuantity, increaseQuantity, removeFromcart, setCart } from "@/redux/features/cartSlice.js";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
@@ -13,7 +13,53 @@ export default function CartPage() {
     const { items } = useSelector((state) => state.cart);
     const dispatcher = useDispatch()
     useEffect(() => {
-        dispatcher(lsToCart()); // Page load hone par LocalStorage se sync
+        let active = true;
+
+        async function loadServerCart() {
+            dispatcher(lsToCart());
+
+            try {
+                const response = await client.get("/cart");
+                if (!active || !response.data.success) return;
+
+                let original_total = 0;
+                let final_total = 0;
+                const serverItems = (response.data.cart || [])
+                    .map((item) => {
+                        if (!item?.product_id) return null;
+
+                        const product = item.product_id;
+                        const qty = Number(item.quantity) || 1;
+                        original_total += Number(product.originalPrice || 0) * qty;
+                        final_total += Number(product.salePrice || 0) * qty;
+
+                        return {
+                            id: product._id,
+                            name: product.name,
+                            salePrice: product.salePrice,
+                            discount: product.discount,
+                            originalPrice: product.originalPrice,
+                            qty,
+                            thumbnail: product.thumbnail,
+                        };
+                    })
+                    .filter(Boolean);
+
+                dispatcher(setCart({ items: serverItems, original_total, final_total }));
+            } catch (error) {
+                if (error.response?.status !== 401) {
+                    console.error("Cart fetch failed:", error);
+                }
+            }
+        }
+
+        loadServerCart();
+        const refreshTimer = window.setInterval(loadServerCart, 5000);
+
+        return () => {
+            active = false;
+            window.clearInterval(refreshTimer);
+        };
     }, [dispatcher]);
 
     async function changeQuantity(item, quantity) {
@@ -37,6 +83,19 @@ export default function CartPage() {
         } else if (quantity < item.qty) {
             dispatcher(decreaseQuantity({ id: item.id }));
         }
+    }
+
+    async function removeItem(item) {
+        try {
+            await client.delete(`/cart/item/${item.id}`);
+        } catch (error) {
+            if (error.response?.status !== 401 && error.response?.status !== 404) {
+                console.error("Cart item removal failed:", error);
+                return;
+            }
+        }
+
+        dispatcher(removeFromcart({ id: item.id }));
     }
 
     if (!cartItem?.items || cartItem.items.length === 0) {
@@ -120,7 +179,7 @@ export default function CartPage() {
 
                                     </div>
 
-                                    <button onClick={() => dispatcher(removeFromcart({ id: item.id }))} className="text-red-500 font-medium">
+                                    <button onClick={() => removeItem(item)} className="text-red-500 font-medium">
                                         Remove
                                     </button>
 

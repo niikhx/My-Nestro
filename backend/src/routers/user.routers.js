@@ -23,7 +23,7 @@ router.post("/register", register);
 router.post("/verify-otp", VerifyOtp);
 router.get("/get-profile", protect, getProfile);
 router.post("/signin", signin);
-router.post("/logout", logoutWithCredentials);
+router.post("/logout", logout);
 router.post("/delete-account", deleteAccountWithCredentials);
 router.put("/edit/:id", edit);
 router.put("/update-profile/:id", updateProfile);

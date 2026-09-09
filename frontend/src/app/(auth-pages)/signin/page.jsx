@@ -10,9 +10,12 @@ import { CiDeliveryTruck } from "react-icons/ci";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
 import { client } from "@/utils/helper";
+import { setCart } from "@/redux/features/cartSlice";
+import { useDispatch } from "react-redux";
 
 export default function AuthPage() {
   const router = useRouter();
+  const dispatcher = useDispatch();
   const searchParams = useSearchParams();
   const activeTab = searchParams.get("auth") === "signin" ? "signin" : "signup";
 
@@ -61,27 +64,10 @@ export default function AuthPage() {
         toast.success(response.data.message || "Login Successfully");
         setSignInData({ email: "", password: "" });
 
-        let cart_item = [];
         try {
-          const storedCart = JSON.parse(localStorage.getItem("cart") || "{}");
-          cart_item = Array.isArray(storedCart.items)
-            ? storedCart.items.map((item) => ({
-                id: item.id,
-                qty: item.qty || 1,
-              }))
-            : [];
-        } catch (error) {
-          cart_item = [];
-        }
-
-        try {
-          const cart_response = await client.post("/cart/sync-cart", {
-            cart_item: cart_item,
-            user_id: response.data.user_id,
-          });
-
+          const cart_response = await client.get("/cart");
           if (cart_response.data.success) {
-            const latest_cart = cart_response.data.latest_cart || [];
+            const latest_cart = cart_response.data.cart || [];
             let original_total = 0;
             let final_total = 0;
 
@@ -110,9 +96,10 @@ export default function AuthPage() {
               items: new_cart,
               original_total,
               final_total,
+              user_id: response.data.user_id,
             };
 
-            localStorage.setItem("cart", JSON.stringify(cart_data));
+            dispatcher(setCart(cart_data));
           }
         } catch (cartError) {
           console.error("Cart sync failed after login:", cartError);
