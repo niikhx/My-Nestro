@@ -3,11 +3,16 @@
 import { client } from "@/utils/helper";
 import { useEffect, useState } from "react";
 import Select from 'react-select';
-import { Editor } from 'primereact/editor';
+import dynamic from 'next/dynamic';
 import { FiSave, FiTag } from "react-icons/fi";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { fetchRoom, fetchCategory } from "@/utils/api";
+
+// Dynamically import PrimeReact Editor to fix Next.js build prerender errors
+const Editor = dynamic(() => import('primereact/editor').then((mod) => mod.Editor), {
+  ssr: false
+});
 
 export default function AddCategoryPage() {
   const router = useRouter();
@@ -23,7 +28,6 @@ export default function AddCategoryPage() {
     color: "", width: "", height: "", depth: "", weight: "",
     image: null
   });
-
 
   // Rooms aur Categories load karne ke liye
   useEffect(() => {
@@ -62,16 +66,16 @@ export default function AddCategoryPage() {
   // Normal text aur number inputs ke liye
   const handleChange = (e) => {
     setFormData(prev => ({
-       ...prev, [e.target.name]: e.target.value
-       }));
+      ...prev, [e.target.name]: e.target.value
+    }));
   };
 
   // Name likhte hi automatic Slug banane ke liye
   const handleNameChange = (value) => {
     const cleanSlug = value.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
     setFormData(prev => (
-      { 
-        ...prev, name: value, slug: cleanSlug 
+      {
+        ...prev, name: value, slug: cleanSlug
       }
     ));
   };
@@ -84,7 +88,6 @@ export default function AddCategoryPage() {
       setImagePreview(URL.createObjectURL(file));
     }
   };
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -100,7 +103,6 @@ export default function AddCategoryPage() {
       const sendData = new FormData();
       const numberFields = ["originalPrice", "salePrice", "discount", "width", "height", "depth", "weight"];
 
-      // Pure data ko loop karke clean karne ka sabse asan tarika
       for (const key in formData) {
         const value = formData[key];
 
@@ -126,7 +128,7 @@ export default function AddCategoryPage() {
     } finally {
       setWait(false);
     }
-  };[formData.originalPrice, formData.salePrice];
+  };
 
   return (
     <div className="min-h-screen mx-auto bg-[#f7f8fd] p-6">
