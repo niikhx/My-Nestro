@@ -1,5 +1,6 @@
 "use client";
 
+export const dynamic = 'force-dynamic'; // Prerender error Bypass karne ke liye
 import { client } from "@/utils/helper";
 import { useEffect, useState } from "react";
 import Select from 'react-select';
