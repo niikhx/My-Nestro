@@ -1,17 +1,18 @@
 "use client";
 
-export const dynamic = 'force-dynamic'; // Prerender error Bypass karne ke liye
+export const dynamic = 'force-dynamic';
+
 import { client } from "@/utils/helper";
 import { useEffect, useState } from "react";
 import Select from 'react-select';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic'; // Dynamic import renamed to avoid collision
 import { FiSave, FiTag } from "react-icons/fi";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { fetchRoom, fetchCategory } from "@/utils/api";
 
 // Dynamically import PrimeReact Editor to fix Next.js build prerender errors
-const Editor = dynamic(() => import('primereact/editor').then((mod) => mod.Editor), {
+const Editor = dynamicImport(() => import('primereact/editor').then((mod) => mod.Editor), {
   ssr: false
 });
 
