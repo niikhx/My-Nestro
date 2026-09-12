@@ -5,16 +5,11 @@ export const dynamic = 'force-dynamic';
 import { client } from "@/utils/helper";
 import { useEffect, useState } from "react";
 import Select from 'react-select';
-import dynamicImport from 'next/dynamic'; // Dynamic import renamed to avoid collision
 import { FiSave, FiTag } from "react-icons/fi";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { fetchRoom, fetchCategory } from "@/utils/api";
-
-// Dynamically import PrimeReact Editor to fix Next.js build prerender errors
-const Editor = dynamicImport(() => import('primereact/editor').then((mod) => mod.Editor), {
-  ssr: false
-});
+import RichTextEditor from "@/components/RichTextEditor"; // Pure Isolated Client Component
 
 export default function AddCategoryPage() {
   const router = useRouter();
@@ -31,7 +26,6 @@ export default function AddCategoryPage() {
     image: null
   });
 
-  // Rooms aur Categories load karne ke liye
   useEffect(() => {
     async function loadData() {
       try {
@@ -45,7 +39,6 @@ export default function AddCategoryPage() {
     loadData();
   }, []);
 
-  // Automatic Discount Calculate karne ke liye
   useEffect(() => {
     const original = Number(formData.originalPrice);
     const sale = Number(formData.salePrice);
@@ -60,29 +53,21 @@ export default function AddCategoryPage() {
     }
   }, [formData.originalPrice, formData.salePrice]);
 
-  // Memory free karne ke liye (Image Preview cleanup)
   useEffect(() => {
     return () => imagePreview && URL.revokeObjectURL(imagePreview);
   }, [imagePreview]);
 
-  // Normal text aur number inputs ke liye
   const handleChange = (e) => {
     setFormData(prev => ({
       ...prev, [e.target.name]: e.target.value
     }));
   };
 
-  // Name likhte hi automatic Slug banane ke liye
   const handleNameChange = (value) => {
     const cleanSlug = value.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
-    setFormData(prev => (
-      {
-        ...prev, name: value, slug: cleanSlug
-      }
-    ));
+    setFormData(prev => ({ ...prev, name: value, slug: cleanSlug }));
   };
 
-  // Image upload aur preview ke liye
   const handleImage = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -94,7 +79,6 @@ export default function AddCategoryPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Simple Form Validation Checks
     if (!formData.name.trim()) return toast.error("Product Name is required");
     if (!formData.roomId) return toast.error("Please select a Room");
     if (!formData.categoryId) return toast.error("Please select a Category");
@@ -107,7 +91,6 @@ export default function AddCategoryPage() {
 
       for (const key in formData) {
         const value = formData[key];
-
         if (value !== null && value !== "") {
           const finalValue = numberFields.includes(key) ? Number(value) : value;
           sendData.append(key, finalValue);
@@ -143,7 +126,6 @@ export default function AddCategoryPage() {
 
         <form onSubmit={handleSubmit} className="p-5 space-y-5">
 
-          {/* Name & Slug */}
           <div className="grid md:grid-cols-2 gap-5">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-[#2a3460]">Product Name *</label>
@@ -167,7 +149,6 @@ export default function AddCategoryPage() {
             </div>
           </div>
 
-          {/* Room & Category */}
           <div className="grid md:grid-cols-2 gap-5">
             <div>
               <label className="text-xs font-semibold text-[#2a3460]">Room *</label>
@@ -190,7 +171,6 @@ export default function AddCategoryPage() {
             </div>
           </div>
 
-          {/* Pricing */}
           <div className="grid md:grid-cols-3 gap-5">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-[#2a3460]">Original Price</label>
@@ -229,10 +209,9 @@ export default function AddCategoryPage() {
             </div>
           </div>
 
-          {/* Descriptions */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-[#2a3460]">Short Description</label>
-            <Editor
+            <RichTextEditor
               value={formData.shortDescription}
               onTextChange={(e) => setFormData(prev => ({ ...prev, shortDescription: e.htmlValue || "" }))}
               style={{ height: '120px' }}
@@ -241,14 +220,13 @@ export default function AddCategoryPage() {
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-[#2a3460]">Full Description</label>
-            <Editor
+            <RichTextEditor
               value={formData.description}
               onTextChange={(e) => setFormData(prev => ({ ...prev, description: e.htmlValue || "" }))}
               style={{ height: '200px' }}
             />
           </div>
 
-          {/* Specifications */}
           <div className="grid md:grid-cols-3 gap-5">
             <input
               type="text"
@@ -276,7 +254,6 @@ export default function AddCategoryPage() {
             />
           </div>
 
-          {/* Dimensions */}
           <div className="grid md:grid-cols-3 gap-5">
             <input
               type="number"
@@ -304,7 +281,6 @@ export default function AddCategoryPage() {
             />
           </div>
 
-          {/* Image */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-[#2a3460]">Thumbnail *</label>
             <input
@@ -322,7 +298,6 @@ export default function AddCategoryPage() {
             )}
           </div>
 
-          {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               type="button"
