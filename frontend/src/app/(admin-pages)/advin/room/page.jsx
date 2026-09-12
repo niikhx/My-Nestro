@@ -16,7 +16,7 @@ export default async function RoomTable() {
       <div className="p-5 border-b flex justify-between items-center">
         <h2 className="text-xl font-semibold">Products</h2>
         {/* H2 tag se text-white aur unneeded styles hataye */}
-        <Link href={'/admin/room/add'}>
+        <Link href={'/advin/room/add'}>
           <button className="bg-amber-800 text-white px-4 py-2 rounded-2xl hover:cursor-pointer">
             Add Rooms
           </button>

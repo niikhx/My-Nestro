@@ -33,7 +33,7 @@ export default function Sidebar() {
         {
           name: "Dashboard",
           icon: <MdDashboard size={20} />,
-          path: "/admin",
+          path: "/advin",
         },
       ],
     },
@@ -43,17 +43,17 @@ export default function Sidebar() {
         {
           name: "Products",
           icon: <FaBox size={18} />,
-          path: "/admin/product",
+          path: "/advin/product",
         },
         {
           name: "Categories",
           icon: <MdCategory size={18} />,
-          path: "/admin/category",
+          path: "/advin/category",
         },
         {
           name: "Inventory",
           icon: <MdInventory size={18} />,
-          path: "/admin/inventory",
+          path: "/advin/inventory",
         },
       ],
     },
@@ -63,7 +63,7 @@ export default function Sidebar() {
         {
           name: "Orders",
           icon: <FaShoppingCart size={18} />,
-          path: "/admin/orders",
+          path: "/advin/orders",
         },
       ],
     },
@@ -73,12 +73,12 @@ export default function Sidebar() {
         {
           name: "Users",
           icon: <FaUsers size={18} />,
-          path: "/admin/users",
+          path: "/advin/users",
         },
         {
           name: "Reviews",
           icon: <MdReviews size={18} />,
-          path: "/admin/reviews",
+          path: "/advin/reviews",
         },
       ],
     },
@@ -88,7 +88,7 @@ export default function Sidebar() {
         {
           name: "Coupons",
           icon: <FaTags size={18} />,
-          path: "/admin/coupons",
+          path: "/advin/coupons",
         },
       ],
     },
@@ -98,7 +98,7 @@ export default function Sidebar() {
         {
           name: "Settings",
           icon: <MdSettings size={18} />,
-          path: "/admin/settings",
+          path: "/advin/settings",
         },
       ],
     },

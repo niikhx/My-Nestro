@@ -143,7 +143,6 @@ export default function AuthPage() {
     } finally {
       setLoading(false);
     }
-    router.push("/signin");
   }
 
   return (

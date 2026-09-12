@@ -1,31 +1,12 @@
 "use client";
 
-import { client } from '@/utils/helper';
 import { toast } from 'sonner';
-import { use, useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { fetchCategoryById, fetchRoomById } from "@/utils/api";
+import { client } from '@/utils/helper';
 
-export default function EditCategory({ params }) {
-  const { room_id } = use(params)
-  const router = useRouter()
-  useEffect(() => {
-    const getData = async () => {
-      const { data, success } = await fetchRoomById(room_id);
-      if (success) {
-        setFormdata({
-          name: data?.name || "",
-          slug: data?.slug || ""
-        })
-      }
-    };
-
-    if (room_id) {
-      getData();
-    }
-  }, [room_id]);
-
-
+export default function RoomsAdd() {
+  const router = useRouter();
   const [formdata, setFormdata] = useState({
     name: "",
     slug: ""
@@ -52,11 +33,11 @@ export default function EditCategory({ params }) {
     }
   }
 
-
   function submitHandler(e) {
 
     e.preventDefault();
-    client.put(`room/edit/${room_id}`, formdata).then(
+
+    client.post("room/create", formdata).then(
       (response) => {
         if (response.data.success) {
           toast.success(response.data.massage)
@@ -65,7 +46,7 @@ export default function EditCategory({ params }) {
             slug: ""
           });
         }
-        router.push("/admin/room")
+        router.push("/advin/room")
       }
     ).catch(
       (error) => {
@@ -80,8 +61,7 @@ export default function EditCategory({ params }) {
   function resetHandler() {
     setFormdata({
       name: "",
-      slug: "",
-      image: null
+      slug: ""
     });
   }
 
@@ -96,11 +76,11 @@ export default function EditCategory({ params }) {
           </span>
 
           <h1 className="mt-2 text-3xl font-medium text-[#1A1A1A]">
-            Edit Room
+            Create Rooms
           </h1>
 
           <p className="mt-2 text-sm text-[#666666]">
-            Edit your room to organize your products.
+            Add a new room to organize your products.
           </p>
         </div>
 
@@ -110,7 +90,7 @@ export default function EditCategory({ params }) {
           {/* Category Name */}
           <div>
             <label className="block text-sm font-medium text-[#1A1A1A] mb-2">
-              Edit Room Name
+              Room Name
             </label>
 
             <input
@@ -127,7 +107,7 @@ export default function EditCategory({ params }) {
           {/* Slug */}
           <div>
             <label className="block text-sm font-medium text-[#1A1A1A] mb-2">
-             Room Slug
+              Room Slug
             </label>
 
             <input
@@ -152,7 +132,7 @@ export default function EditCategory({ params }) {
               type="submit"
               className="px-8 h-14 bg-[#8C6239] text-white rounded-xl font-medium hover:opacity-90 transition"
             >
-              Edit Room
+              Save Room
             </button>
 
             <button

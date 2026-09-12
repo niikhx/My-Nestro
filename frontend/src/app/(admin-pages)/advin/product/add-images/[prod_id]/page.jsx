@@ -63,7 +63,7 @@ export default function AddCategoryUI({ params }) {
       )
 
     }
-    router.push("/admin/product")
+    router.push("/advin/product")
   }
 
 

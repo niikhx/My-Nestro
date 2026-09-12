@@ -1,4 +1,6 @@
 import UserModel from "../models/user.model.js";
+import CartModel from "../models/cart.model.js";
+import OrderModel from "../models/order.model.js";
 import {
   sendBadRequest,
   sendConflict,
@@ -7,39 +9,60 @@ import {
   sendServerError,
   sendSuccess,
 } from "../utils/response.js";
-import Cryptr from "cryptr";
+import bcrypt from "bcryptjs";
 import sendOtpMail from "../utils/otpmail.js";
 import { generateToken } from "../utils/helper.js";
 
-const cryptr = new Cryptr(process.env.SECRET_KEY);
 
 // 1. Register User
+// Register User (Updated for Debugging)
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    if (!name || !email || !password) return sendBadRequest(res);
+
+    // Request body check log
+    console.log("Register Request Received Body:", req.body);
+
+    if (!name || !email || !password) {
+      console.log("Validation Failed: Missing Fields");
+      return sendBadRequest(res, "Please fill all fields");
+    }
+
     const normalizedEmail = email.trim().toLowerCase();
     const user = await UserModel.findOne({ email: normalizedEmail });
-    if (user) return sendConflict(res, "User already exists");
-    const encrypted_Password = cryptr.encrypt(password);
 
-    // Exact 6 digits OTP: 100000 - 999999
+    if (user) {
+      console.log("User already exists with email:", normalizedEmail);
+      return sendConflict(res, "User already exists");
+    }
+
+    // Password Hash
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Exact 6 digits OTP
     const otp = Math.floor(100000 + Math.random() * 900000);
-    const otpExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+    const otpExpire = Date.now() + 10 * 60 * 1000;
 
+    // Send Mail (Isme error aane par catch me jayega)
+    console.log("Attempting to send OTP email to:", normalizedEmail);
     await sendOtpMail(normalizedEmail, otp);
+
+    // Save User
     await UserModel.create({
       name,
       email: normalizedEmail,
-      password: encrypted_Password,
+      password: hashedPassword,
       otp,
-      otpExpire
+      otpExpire,
     });
 
+    console.log("User created successfully in database");
     return sendCreated(res, "User created successfully");
   } catch (error) {
-    console.error("Register Error:", error);
-    return sendServerError(res);
+    // Exact error terminal par log hoga
+    console.error("REGISTER API ERROR DETAILS:", error);
+    return sendServerError(res, error.message || "Internal Server Error");
   }
 };
 
@@ -77,34 +100,47 @@ const signin = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return sendBadRequest(res);
+
     const user = await UserModel.findOne({ email: email.trim().toLowerCase() });
     if (!user) return sendNotFound(res, "Account not found");
 
-    let decryptedPass;
-    try {
-      decryptedPass = cryptr.decrypt(user.password);
-    } catch (error) {
-      console.error("Stored password could not be decrypted:", error);
-      return sendServerError(res);
+    if (!user.isVerified) {
+      return sendBadRequest(res, "Please verify OTP before signin");
     }
 
-    if (decryptedPass !== password) {
+    // Compare Password using bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       return sendBadRequest(res, "Invalid email or password");
     }
-    const token = generateToken(user.id)
 
+    const token = generateToken(user.id);
+
+    // Set cookie with cross-origin support
     res.cookie('jwt', token, {
-      maxAge: 30 * 24 * 60 * 60 * 1000,       // Expiration time in milliseconds (15 minutes)
-      httpOnly: true,       // Prevents client-side JS from reading the cookie (protects against XSS)
-      secure: false,         // Ensures cookie is only sent over HTTPS connections
-      sameSite: 'strict'    // Controls cross-site request behavior ('strict', 'lax', or 'none')
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax' // Cross-origin cookie passing ke liye lax use kiya hai
     });
+
+    // Keep the current project role source readable for frontend route middleware.
+    res.cookie('role', user.role, {
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      httpOnly: false,
+      secure: false,
+      sameSite: 'lax'
+    });
+
     return sendSuccess(res, "login successfully", { user_id: user.id });
 
   } catch (error) {
-    return sendServerError(res)
+    console.error("Signin Error:", error);
+    return sendServerError(res);
   }
-}
+};
+
+// adminLogin kept as unique handler in same file earlier section above.
 
 // Dummy / Placeholder Controllers
 const read = async (req, res) => {
@@ -178,7 +214,12 @@ const logout = async (req, res) => {
     res.clearCookie("jwt", {
       httpOnly: true,
       secure: false,
-      sameSite: "strict",
+      sameSite: "lax",
+    });
+    res.clearCookie("role", {
+      httpOnly: false,
+      secure: false,
+      sameSite: "lax",
     });
 
     return res.status(200).json({
@@ -195,7 +236,15 @@ const logout = async (req, res) => {
 
 const logoutWithCredentials = async (req, res) => {
   try {
+    const loggedInUser = req.user;
     const { email, password } = req.body;
+
+    if (!loggedInUser) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
     if (!email || !password) {
       return res.status(400).json({
@@ -204,7 +253,15 @@ const logoutWithCredentials = async (req, res) => {
       });
     }
 
-    const user = await UserModel.findOne({ email: email.trim().toLowerCase() });
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (normalizedEmail !== String(loggedInUser.email).trim().toLowerCase()) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    const user = await UserModel.findById(loggedInUser._id);
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -212,23 +269,34 @@ const logoutWithCredentials = async (req, res) => {
       });
     }
 
-    const decryptedPassword = cryptr.decrypt(user.password);
-    if (decryptedPassword !== password) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
       });
     }
 
+    await Promise.all([
+      CartModel.deleteMany({ user_id: user._id }),
+      OrderModel.deleteMany({ user_id: user._id }),
+      UserModel.deleteOne({ _id: user._id }),
+    ]);
+
     res.clearCookie("jwt", {
       httpOnly: true,
       secure: false,
-      sameSite: "strict",
+      sameSite: "lax",
+    });
+    res.clearCookie("role", {
+      httpOnly: false,
+      secure: false,
+      sameSite: "lax",
     });
 
     return res.status(200).json({
       success: true,
-      message: "Logout successful",
+      message: "Account deleted successfully",
     });
   } catch (error) {
     console.error("Credential logout error:", error);
@@ -241,7 +309,15 @@ const logoutWithCredentials = async (req, res) => {
 
 const deleteAccountWithCredentials = async (req, res) => {
   try {
+    const loggedInUser = req.user;
     const { email, password } = req.body;
+
+    if (!loggedInUser) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
     if (!email || !password) {
       return res.status(400).json({
@@ -250,7 +326,15 @@ const deleteAccountWithCredentials = async (req, res) => {
       });
     }
 
-    const user = await UserModel.findOne({ email: email.trim().toLowerCase() });
+    const normalizedEmail = String(email).trim().toLowerCase();
+    if (normalizedEmail !== String(loggedInUser.email).trim().toLowerCase()) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    const user = await UserModel.findById(loggedInUser._id);
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -258,24 +342,34 @@ const deleteAccountWithCredentials = async (req, res) => {
       });
     }
 
-    const decryptedPassword = cryptr.decrypt(user.password);
-    if (decryptedPassword !== password) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
       });
     }
 
-    await UserModel.deleteOne({ _id: user._id });
+    await Promise.all([
+      CartModel.deleteMany({ user_id: user._id }),
+      OrderModel.deleteMany({ user_id: user._id }),
+      UserModel.deleteOne({ _id: user._id }),
+    ]);
+
     res.clearCookie("jwt", {
       httpOnly: true,
       secure: false,
-      sameSite: "strict",
+      sameSite: "lax",
+    });
+    res.clearCookie("role", {
+      httpOnly: false,
+      secure: false,
+      sameSite: "lax",
     });
 
     return res.status(200).json({
       success: true,
-      message: "Account deleted successfully",
+      message: "Account delete successfully",
     });
   } catch (error) {
     console.error("Account deletion error:", error);
@@ -286,8 +380,6 @@ const deleteAccountWithCredentials = async (req, res) => {
   }
 };
 
-
-// Complete Export Object
 export {
   register,
   VerifyOtp,

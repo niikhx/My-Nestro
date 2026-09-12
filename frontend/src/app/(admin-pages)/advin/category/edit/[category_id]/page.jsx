@@ -94,7 +94,7 @@ export default function EditCategory({ params }) {
         if (response.data.success) {
           // "message" fix kiya gaya
           toast.success(response.data.message || "Category updated successfully!");
-          router.push("/admin/category");
+          router.push("/advin/category");
         }
       })
       .catch((error) => {

@@ -11,7 +11,7 @@ export default async function ProductTable() {
       <div className="p-5 border-b flex justify-between">
         <h2 className="text-xl font-semibold">Products</h2>
         <h2 className="text-xl font-semibold text-white">
-          <Link href={'/admin/category/add'}>
+          <Link href={'/advin/category/add'}>
             <button className="bg-amber-800 px-4 py-2 rounded-2xl hover:cursor-pointer">
               Category Add
             </button>

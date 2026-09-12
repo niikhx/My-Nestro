@@ -13,7 +13,7 @@ import {
   deleteAccountWithCredentials,
   updatePassword,
   updateProfile,
-  getProfile
+  getProfile,
 } from "../controllers/user.controller.js";
 import { protect } from "../middleware/protect.js";
 
@@ -24,10 +24,12 @@ router.post("/verify-otp", VerifyOtp);
 router.get("/get-profile", protect, getProfile);
 router.post("/signin", signin);
 router.post("/logout", logout);
-router.post("/delete-account", deleteAccountWithCredentials);
+router.post("/logout-with-credentials", protect, logoutWithCredentials);
+router.post("/delete-account", protect, deleteAccountWithCredentials);
 router.put("/edit/:id", edit);
 router.put("/update-profile/:id", updateProfile);
 router.put("/update-password/:id", updatePassword);
+router
 router.get("/", read);
 router.get("/logout", protect, logout)
 router.get("/:id", readById);

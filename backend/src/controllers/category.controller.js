@@ -8,6 +8,10 @@ import {
 // create api
 const create = async (req, res) => {
   try {
+    if (!req.file) {
+      return sendBadRequest(res, "Image is required");
+    }
+
     const { name, slug } = req.body;
     const image_url = req.file.path;
     const category = await categorymodel.findOne({ name: name })

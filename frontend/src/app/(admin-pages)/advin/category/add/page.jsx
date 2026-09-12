@@ -56,7 +56,7 @@ export default function CategoryForm() {
             image: null
           });
         }
-        router.push("/admin/category")
+        router.push("/advin/category")
       }
     ).catch(
       (error) => {

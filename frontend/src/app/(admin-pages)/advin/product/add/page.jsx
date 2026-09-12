@@ -116,7 +116,7 @@ export default function AddCategoryPage() {
 
       if (response.data?.success) {
         toast.success(response.data.message || "Product added successfully!");
-        router.push("/admin/product");
+        router.push("/advin/product");
       } else {
         toast.error(response.data?.message || "Failed to create product");
       }
