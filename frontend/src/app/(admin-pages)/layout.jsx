@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from 'sonner';
@@ -29,7 +30,7 @@ export default function RootLayout({ children }) {
       <body>
         <div className="w-full h-full flex">
           <Toaster position="top-center" richColors />
-          <Sidebar  />
+          <Sidebar />
           <div className="flex-1">
             <Header />
             <div className="p-4 w-full h-full">
