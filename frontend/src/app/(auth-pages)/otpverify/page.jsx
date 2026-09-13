@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FaShieldAlt } from "react-icons/fa";
 import { toast } from "sonner";
 import { client } from "@/utils/helper";
 
-export default function VerifyOTP() {
+function VerifyOTPContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -130,5 +130,13 @@ export default function VerifyOTP() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function VerifyOTP() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-100">Loading...</div>}>
+      <VerifyOTPContent />
+    </Suspense>
   );
 }

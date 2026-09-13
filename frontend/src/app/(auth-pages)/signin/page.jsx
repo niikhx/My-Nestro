@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import { client } from "@/utils/helper";
 import { setCart } from "@/redux/features/cartSlice";
 import { useDispatch } from "react-redux";
 
-export default function AuthPage() {
+function AuthPageContent() {
   const router = useRouter();
   const dispatcher = useDispatch();
   const searchParams = useSearchParams();
@@ -437,5 +437,13 @@ export default function AuthPage() {
         </div>
       </div>
     </section>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-100">Loading...</div>}>
+      <AuthPageContent />
+    </Suspense>
   );
 }
